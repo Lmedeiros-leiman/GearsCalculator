@@ -179,6 +179,7 @@
     <script>
         const resultTable = document.getElementById("showResult");
         const userInput = document.getElementById("input");
+        const submitButton = document.getElementById("submit")
 
         let selectedOptionList = {
             "Termitekng9 UID": false,
@@ -206,11 +207,15 @@
         onload = () => {
             document.getElementById("form").addEventListener("submit", (e) => {
                 e.preventDefault();
-                let result = Calculate(userInput.value)
-                
-                console.log(result)
+                submitButton.setAttribute("disabled", true)
+                userInput.setAttribute("readonly", true)
 
+                let result = Calculate(userInput.value)
+                result = formatResult(result)
                 showResult(result)
+
+                submitButton.removeAttribute("disabled")
+                userInput.removeAttribute("readonly")
             })
 
             let generateSelectableList = (function () {
@@ -249,26 +254,34 @@
         }
 
         function formatResult(originalResult) {
-            console.log(originalResult)
-            let result = {}
+            if (originalResult == null) { return originalResult }
 
+            let result = {}
             for (const key in tableValues) {
-                if (key == "Remainder" || !selectedOptionList[key]) { continue; }
-                result[key] = originalResult[key]
+                if (originalResult[key] == undefined) {
+                    if (selectedOptionList[key] == true) {
+                        result[key] = 0;
+                    }
+                } else {
+                    result[key] = originalResult[key]
+                }
             }
-            console.log(result)
-            return result;
+            return result
         }
 
         function Calculate(input, result = {}, depth = 0) {
             // Base case: if the input is less than or equal to 0, return the result
             if (input <= 0) {
-                return result;
+                if (input === 0) {
+                    return result;
+                } else {
+                    return null;
+                }
             }
 
             // Recursive case: try each possible subtraction
             for (const key in tableValues) {
-                if (key == "Remainder" || !selectedOptionList[key]) { continue; }
+                if (key === "Remainder" || !selectedOptionList[key]) { continue; }
 
                 const value = tableValues[key];
                 if (input >= value) {
@@ -286,9 +299,8 @@
                 }
             }
 
-            // If no recursive call returns our result.
-            result["Remainder"] = input
-            return result;
+            // If no recursive call returns a result, return null
+            return null;
         }
 
 
@@ -303,19 +315,37 @@
 
             let table = document.createElement("table")
 
-            for (const key in tableValues) {
-                if (selectedOptionList[key] == false && key != "Remainder") { continue; }
+
+            if (result == null) {
                 let row = document.createElement("tr")
                 let header = document.createElement("th")
-                header.innerHTML = key
+                header.innerHTML = "Nope.avi"
                 row.append(header)
 
                 let data = document.createElement("td")
-                data.innerHTML = result[key]
+                data.innerHTML = "No solution found with 0 remainder."
                 row.append(data)
 
                 table.append(row)
+                
+            } else {
+                for (const key in tableValues) {
+                    if ( !selectedOptionList[key] ) { continue; }
+                    let row = document.createElement("tr")
+                    let header = document.createElement("th")
+                    header.innerHTML = key
+                    row.append(header)
+
+                    let data = document.createElement("td")
+                    data.innerHTML = result[key]
+                    row.append(data)
+
+                    table.append(row)
+                }
             }
+
+
+
             resultTable.append(table)
         }
 
